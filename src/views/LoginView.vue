@@ -1,27 +1,30 @@
 <template>
   <div>
-    <Title></Title>
     <DynamicForm
       :fields="fields"
       buttonText="Login"
       linkText="還未註冊?點此建立"
       linkTo="/register"
       :linkClass="errorMsgClass"
-      @button-click="loginHandler"
+      :googleButton="true"
+      @button-click="emailSignIn"
+      @google-sign-in="googleSignIn"
     >
       <template #header> Sign in to start your session </template>
       <template #link>
         {{ errorMsg }}
       </template>
     </DynamicForm>
-    <GoogleSignInButton></GoogleSignInButton>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import DynamicForm from '@/components/cover/DynamicForm.vue'
-import GoogleSignInButton from '@/components/cover/GoogleSignInButton.vue';
+import { mail_login } from '@/functions/auth'
+
+let errorMsgClass = ref(null)
+let errorMsg = ref('')
 
 const fields = ref([
   {
@@ -40,7 +43,7 @@ const fields = ref([
   }
 ])
 
-const loginHandler = () => {
+const emailSignIn = async () => {
   errorMsgClass.value = 'text-red-500'
   const data = fields.value.reduce((result, field) => {
     result[field.id] = field.value
@@ -50,6 +53,21 @@ const loginHandler = () => {
     errorMsg.value = 'All fields are required'
     return
   }
+  const res = await mail_login(data.email, data.password);
+  
+  if (res.status === 200) {
+    errorMsg.value = ''
+    errorMsgClass.value = 'text-green-500'
+    errorMsg.value = 'Login success'
+    window.location.href = '/home'
+  } else {
+    errorMsg.value = 'Login failed'
+  }
+}
+
+const googleSignIn = () => {
+  console.log('google sign in')
+  window.location.href = 'http://localhost:4876/auth/google_login'
 }
 
 </script>
