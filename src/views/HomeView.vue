@@ -27,7 +27,9 @@
               </div>
               <div>
                 <h3 class="font-semibold">{{ chat.name }}</h3>
-                <div class="text-gray-500 text-sm truncate my-1">{{ formattedLastMessage(chat.lastMessage) }}</div>
+                <div class="text-gray-500 text-sm truncate my-1">
+                  {{ formattedLastMessage(chat.lastMessage) }}
+                </div>
               </div>
             </div>
           </div>
@@ -74,7 +76,8 @@
                   message.sender === 'me' ? 'bg-blue-500 text-white' : 'bg-white shadow'
                 ]"
               >
-                <p class="whitespace-pre-wrap">{{ message.text }}</p>
+                <p v-if="message.text" class="whitespace-pre-wrap">{{ message.text }}</p>
+                <img v-if="message.image" :src="message.image" class="mt-2 rounded-lg max-w-xs bg-transparent"/>
               </div>
               <div
                 :class="{
@@ -88,9 +91,19 @@
             </div>
           </div>
         </div>
-        <footer v-if="selectedChat" class="bg-white p-4 shadow-lg flex items-center" @drop.prevent="handleDrop" @dragover.prevent>
+        <footer
+          v-if="selectedChat"
+          class="bg-white p-4 shadow-lg flex items-center"
+          @drop.prevent="handleDrop"
+          @dragover.prevent
+        >
           <div v-if="previewImages.length" class="flex mb-2">
-            <img v-for="(image, index) in previewImages" :key="index" :src="image" class="w-20 h-20 object-cover rounded-lg mr-2" />
+            <img
+              v-for="(image, index) in previewImages"
+              :key="index"
+              :src="image"
+              class="w-20 h-20 object-cover rounded-lg mr-2"
+            />
           </div>
           <a-textarea
             id="textarea"
@@ -126,6 +139,7 @@ import 'vue3-emoji/dist/style.css'
 import createWebSocket from '@/functions/websocket'
 import { me } from '@/functions/auth'
 import { UserOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 
 const ws = createWebSocket(`ws://${import.meta.env.VITE_BACKEND}`)
 let meState = ref(null)
@@ -162,9 +176,10 @@ ws.onmessage = (event) => {
       })
     )
   } else if (data.type === 'getonline') {
-    chats.value = chats.value.filter(chat => 
-    data.usersMemberList.some(user => user.id === chat.id)
-  );
+    // problem
+    chats.value = chats.value.filter((chat) =>
+      data.usersMemberList.some((user) => user.id === chat.id)
+    )
     data.usersMemberList.forEach((user) => {
       if (user.id === meState.value.id) return
       if (chats.value.find((chat) => chat.id === user.id)) return
@@ -179,7 +194,13 @@ ws.onmessage = (event) => {
   } else if (data.type === 'message') {
     console.log(data)
     let chat = chats.value.find((chat) => chat.id === data.from)
-    chat.messages.push({ id: Date.now(), text: data.text, sender: data.username , timestamp: data.timestamp})
+    chat.messages.push({
+      id: Date.now(),
+      text: data.text,
+      sender: data.username,
+      image: data.image,
+      timestamp: data.timestamp
+    })
     chat.lastMessage = data.text
     console.log(chats.value)
   }
@@ -188,7 +209,7 @@ ws.onmessage = (event) => {
 const selectedChatId = ref(1)
 const messageText = ref('')
 const chats = ref([])
-const previewImages = ref([]);
+const previewImages = ref([])
 
 const selectedChat = computed(() => {
   return chats.value.find((chat) => chat.id === selectedChatId.value) || chats.value[0]
@@ -199,25 +220,36 @@ const selectChat = (id) => {
 }
 
 const sendMessage = () => {
-  if (messageText.value.trim()) {
-    const images = previewImages.value;
-    selectedChat.value.messages.push({
-      id: Date.now(),
-      text: messageText.value.trim(),
-      sender: 'me',
-      timestamp: new Date().toISOString()
-    })
-    selectedChat.value.lastMessage = messageText.value.trim()
-    ws.send(
-      JSON.stringify({
-        type: 'message',
-        to: selectedChat.value.id,
-        from: meState.value.id,
-        text: messageText.value.trim(),
+  if (selectedChat.value) {
+    const trimmedMessage = messageText.value.trim()
+    const images = previewImages.value
+
+    if (trimmedMessage || images.length) {
+      const message = {
+        id: Date.now(),
+        text: trimmedMessage,
+        image: null,
+        sender: 'me',
         timestamp: new Date().toISOString()
-      })
-    )
-    messageText.value = ''
+      }
+      if (images.length) {
+        message.image = images
+      }
+      ws.send(
+        JSON.stringify({
+          type: 'message',
+          to: selectedChat.value.id,
+          from: meState.value.id,
+          image: message.image,
+          text: messageText.value.trim(),
+          timestamp: new Date().toISOString()
+        })
+      )
+      selectedChat.value.messages.push(message)
+      selectedChat.value.lastMessage = trimmedMessage
+      messageText.value = ''
+      previewImages.value = []
+    }
   }
 }
 
@@ -241,25 +273,25 @@ const appendEmoji = (emoji) => {
 
 const formattedLastMessage = (message) => {
   if (message.length <= 10) {
-    return message;
+    return message
   } else {
-    return message.slice(0, 7) + '...';
+    return message.slice(0, 7) + '...'
   }
-};
+}
 
 const handleDrop = (event) => {
-  const files = event.dataTransfer.files;
+  const files = event.dataTransfer.files
   if (files.length > 0) {
-    const file = files[0];
+    const file = files[0]
     if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onload = (e) => {
-        previewImages.value.push(e.target.result);
-      };
-      reader.readAsDataURL(file);
+        previewImages.value.push(e.target.result)
+      }
+      reader.readAsDataURL(file)
     }
   }
-};
+}
 </script>
 
 <style scoped>
