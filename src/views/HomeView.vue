@@ -77,9 +77,46 @@ import { ref, computed, onMounted } from 'vue'
 import V3Emoji from 'vue3-emoji'
 import 'vue3-emoji/dist/style.css'
 import createWebSocket from "@/functions/websocket";
+import { me } from '@/functions/auth'
 
 const ws = createWebSocket(`ws://${import.meta.env.VITE_BACKEND}`);
+let user = ref(null)
 
+
+onMounted(async() => {
+  selectChat(1)
+  user.value = await me();
+  console.log(user.value)
+  online(user.value)
+})
+
+
+const online = (user) =>{
+  let data = {
+    type: 'online',
+    ...user
+  }
+  ws.send(JSON.stringify(data));
+}
+
+ws.onmessage = (event) => {
+  let data = JSON.parse(event.data)
+  console.log(data)
+  if(data.type === 'online'){
+    if(data.user.id === user.value.id) return
+    chats.value.push({
+      id: data.user.id,
+      name: data.user.username,
+      avatar: data.user.picture,
+      lastMessage: "",
+      messages: []
+    })
+    console.log(chats.value)
+  }
+}
+
+const selectedChatId = ref(1)
+const messageText = ref('')
 const chats = ref([
   {
     id: 1,
@@ -93,23 +130,6 @@ const chats = ref([
   }
   // 更多聊天数据
 ])
-
-onMounted(() => {
-  selectChat(1)
-  online()
-})
-
-const selectedChatId = ref(1)
-const messageText = ref('')
-
-const online = () => {
-  let data = {
-    type: 'online',
-    username: 'John Doe',
-    userid: 1
-  }
-  ws.send(JSON.stringify(data));
-}
 
 const selectedChat = computed(() => {
   return chats.value.find((chat) => chat.id === selectedChatId.value) || chats.value[0]
