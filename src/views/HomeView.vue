@@ -162,10 +162,13 @@ ws.onmessage = (event) => {
       })
     )
   } else if (data.type === 'getonline') {
-    let memberlist = []
+    chats.value = chats.value.filter(chat => 
+    data.usersMemberList.some(user => user.id === chat.id)
+  );
     data.usersMemberList.forEach((user) => {
       if (user.id === meState.value.id) return
-      memberlist.push({
+      if (chats.value.find((chat) => chat.id === user.id)) return
+      chats.value.push({
         id: user.id,
         name: user.username,
         avatar: user.picture,
@@ -173,7 +176,6 @@ ws.onmessage = (event) => {
         messages: []
       })
     })
-    chats.value = memberlist
   } else if (data.type === 'message') {
     console.log(data)
     let chat = chats.value.find((chat) => chat.id === data.from)
