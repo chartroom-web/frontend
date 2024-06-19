@@ -18,8 +18,10 @@
     "ant-design-vue": "^4.2.3",
     "axios": "^1.7.2",
     "dotenv": "^16.4.5",
+    "reconnecting-websocket": "^4.4.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
+    "vue3-emoji": "^2.1.8",
     "yup": "^1.4.0"
   },
   "devDependencies": {

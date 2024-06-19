@@ -53,8 +53,8 @@ const emailSignIn = async () => {
     errorMsg.value = 'All fields are required'
     return
   }
-  const res = await mail_login(data.email, data.password);
-  
+  const res = await mail_login(data.email, data.password)
+
   if (res.status === 200) {
     errorMsg.value = ''
     errorMsgClass.value = 'text-green-500'
@@ -69,5 +69,4 @@ const googleSignIn = () => {
   console.log('google sign in')
   window.location.href = 'http://localhost:4876/auth/google_login'
 }
-
 </script>

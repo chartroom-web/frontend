@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import DynamicForm from '@/components/cover/DynamicForm.vue'
-import {register} from '@/functions/auth'
+import { register } from '@/functions/auth'
 import { ref } from 'vue'
 import * as yup from 'yup'
 
@@ -59,7 +59,7 @@ const fields = ref([
 
 const RegisterHandler = async () => {
   errorMsg.value = ''
-  const data = fields.value.reduce((result : any, field) => {
+  const data = fields.value.reduce((result: any, field) => {
     result[field.id] = field.value.trim()
     return result
   }, {})
@@ -106,11 +106,10 @@ const RegisterHandler = async () => {
   //     errorMsg.value += errorMsg_arr[i] + '\n'
   //   }
   // }
-  const response = await register(data.username, data.email, data.password);
+  const response = await register(data.username, data.email, data.password)
   console.log(response)
   if (errorMsg.value !== '') {
     return
   }
 }
-
 </script>
