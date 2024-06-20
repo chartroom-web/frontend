@@ -18,8 +18,8 @@
         </div>
         <div v-else class="flex">
           <div v-if="message.sender !== 'me'" class="w-10 h-10 rounded-full mr-3">
-            <div v-if="selectedChat.avatar">
-              <img :src="selectedChat.avatar" alt="avatar" class="w-full h-full rounded-full" />
+            <div v-if="message.avatar">
+              <img :src="message.avatar" alt="avatar" class="w-full h-full rounded-full" />
             </div>
             <div
               v-else
@@ -31,6 +31,9 @@
             </div>
           </div>
           <div :class="{ 'text-right': message.sender === 'me', 'flex-1': true }">
+            <div v-if="message.sender !== 'me'" class="text-gray-400 text-xs mb-1">
+              {{ message.sender }}
+            </div>
             <div
               :class="[
                 'inline-block px-4 py-2 rounded-lg',
@@ -38,7 +41,11 @@
               ]"
             >
               <p v-if="message.text" class="whitespace-pre-wrap">{{ message.text }}</p>
-              <img v-if="message.image" :src="message.image" class="mt-2 rounded-lg max-w-xs bg-transparent"/>
+              <img
+                v-if="message.image"
+                :src="message.image"
+                class="mt-2 rounded-lg max-w-xs bg-transparent"
+              />
             </div>
             <div
               :class="{
@@ -58,19 +65,19 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue';
-import MessageInput from '@/components/main/MessageInput.vue';
-import { UserOutlined } from '@ant-design/icons-vue';
+import { defineProps, defineEmits } from 'vue'
+import MessageInput from '@/components/main/MessageInput.vue'
+import { UserOutlined } from '@ant-design/icons-vue'
 
 const props = defineProps({
   selectedChat: Object,
-  meState: Object,
-});
-const emit = defineEmits(['sendMessage']);
+  meState: Object
+})
+const emit = defineEmits(['sendMessage'])
 
 const handleSendMessage = (message) => {
-  emit('sendMessage', message);
-};
+  emit('sendMessage', message)
+}
 </script>
 
 <style scoped>

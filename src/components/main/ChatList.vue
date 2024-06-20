@@ -32,7 +32,10 @@
             </div>
           </div>
           <!-- Red dot for unread messages -->
-          <div v-if="chat.unread" class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full"></div>
+          <div
+            v-if="chat.unread"
+            class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full"
+          ></div>
         </div>
       </template>
       <template v-else>
@@ -45,26 +48,26 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue';
-import { UserOutlined } from '@ant-design/icons-vue';
+import { defineProps, defineEmits } from 'vue'
+import { UserOutlined } from '@ant-design/icons-vue'
 
 const props = defineProps({
-  chats: Array,
-});
-const emit = defineEmits(['selectChat']);
+  chats: Array
+})
+const emit = defineEmits(['selectChat'])
 
 const formattedLastMessage = (message) => {
   if (message.length <= 10) {
-    return message;
+    return message
   } else {
-    return message.slice(0, 7) + '...';
+    return message.slice(0, 7) + '...'
   }
-};
+}
 
 const selectChat = (id) => {
-  props.chats.find((chat) => chat.id === id).unread = false;
-  emit('selectChat', id);
-};
+  props.chats.find((chat) => chat.id === id).unread = false
+  emit('selectChat', id)
+}
 </script>
 
 <style scoped>

@@ -1,5 +1,9 @@
 <template>
-  <footer class="bg-white p-4 shadow-lg flex items-center" @drop.prevent="handleDrop" @dragover.prevent>
+  <footer
+    class="bg-white p-4 shadow-lg flex items-center"
+    @drop.prevent="handleDrop"
+    @dragover.prevent
+  >
     <div v-if="previewImages.length" class="flex mb-2">
       <img
         v-for="(image, index) in previewImages"
@@ -28,17 +32,17 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue';
-import V3Emoji from 'vue3-emoji';
-import 'vue3-emoji/dist/style.css';
+import { ref, defineEmits } from 'vue'
+import V3Emoji from 'vue3-emoji'
+import 'vue3-emoji/dist/style.css'
 
-const emit = defineEmits(['sendMessage']);
-const messageText = ref('');
-const previewImages = ref([]);
+const emit = defineEmits(['sendMessage'])
+const messageText = ref('')
+const previewImages = ref([])
 
 const sendMessage = () => {
-  const trimmedMessage = messageText.value.trim();
-  const images = previewImages.value;
+  const trimmedMessage = messageText.value.trim()
+  const images = previewImages.value
 
   if (trimmedMessage || images.length) {
     const message = {
@@ -47,50 +51,50 @@ const sendMessage = () => {
       image: images.length ? images : null,
       sender: 'me',
       timestamp: new Date().toISOString()
-    };
-    messageText.value = '';
-    previewImages.value = [];
-    emit('sendMessage', message);
+    }
+    messageText.value = ''
+    previewImages.value = []
+    emit('sendMessage', message)
   }
-};
+}
 
 const appendEmoji = (emoji) => {
-  const myField = document.querySelector('#textarea');
+  const myField = document.querySelector('#textarea')
   if (myField.selectionStart || myField.selectionStart === 0) {
-    var startPos = myField.selectionStart;
-    var endPos = myField.selectionEnd;
+    var startPos = myField.selectionStart
+    var endPos = myField.selectionEnd
     myField.value =
       myField.value.substring(0, startPos) +
       emoji +
-      myField.value.substring(endPos, myField.value.length);
-    myField.selectionStart = startPos + 1;
-    myField.selectionEnd = startPos + 1;
+      myField.value.substring(endPos, myField.value.length)
+    myField.selectionStart = startPos + 1
+    myField.selectionEnd = startPos + 1
   } else {
-    myField.value += emoji;
+    myField.value += emoji
   }
-};
+}
 
 const handleEnter = (event) => {
   if (event.shiftKey) {
-    return;
+    return
   }
-  event.preventDefault();
-  sendMessage();
-};
+  event.preventDefault()
+  sendMessage()
+}
 
 const handleDrop = (event) => {
-  const files = event.dataTransfer.files;
+  const files = event.dataTransfer.files
   if (files.length > 0) {
-    const file = files[0];
+    const file = files[0]
     if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onload = (e) => {
-        previewImages.value.push(e.target.result);
-      };
-      reader.readAsDataURL(file);
+        previewImages.value.push(e.target.result)
+      }
+      reader.readAsDataURL(file)
     }
   }
-};
+}
 </script>
 
 <style scoped>

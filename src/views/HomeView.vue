@@ -6,89 +6,96 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import createWebSocket from '@/functions/websocket';
-import { me } from '@/functions/auth';
-import ChatList from '@/components/main/ChatList.vue';
-import ChatWindow from '@/components/main/ChatWindow.vue';
+import { ref, computed, onMounted } from 'vue'
+import createWebSocket from '@/functions/websocket'
+import { me } from '@/functions/auth'
+import ChatList from '@/components/main/ChatList.vue'
+import ChatWindow from '@/components/main/ChatWindow.vue'
 
-const ws = createWebSocket(`ws://${import.meta.env.VITE_BACKEND}`);
-let meState = ref(null);
+const ws = createWebSocket(`ws://${import.meta.env.VITE_BACKEND}`)
+let meState = ref(null)
 
 onMounted(async () => {
-  selectChat(1);
-  meState.value = await me();
-  online(meState.value);
-});
+  meState.value = await me()
+  online(meState.value)
+})
 
 const online = (user) => {
   let data = {
     type: 'online',
-    ...user,
-  };
-  ws.send(JSON.stringify(data));
-};
+    ...user
+  }
+  ws.send(JSON.stringify(data))
+}
 
 ws.onmessage = (event) => {
-  let data = JSON.parse(event.data);
+  let data = JSON.parse(event.data)
   if (data.type === 'online') {
     ws.send(
       JSON.stringify({
-        type: 'getonline',
+        type: 'getonline'
       })
-    );
+    )
   } else if (data.type === 'getonline') {
-    chats.value = chats.value.filter((chat) =>{
-        if (chat.id === -1) {
-          return true;
-        }
-        data.usersMemberList.some((user) => user.id === chat.id)
+    chats.value = chats.value.filter((chat) => {
+      if (chat.id === -1) {
+        return true
       }
-    );
+      data.usersMemberList.some((user) => user.id === chat.id)
+    })
     data.usersMemberList.forEach((user) => {
-      if (user.id === meState.value.id) return;
-      if (chats.value.find((chat) => chat.id === user.id)) return;
+      if (user.id === meState.value.id) return
+      if (chats.value.find((chat) => chat.id === user.id)) return
       chats.value.push({
         id: user.id,
         name: user.username,
         avatar: user.picture,
         lastMessage: '',
-        messages: [],
-      });
-    });
+        messages: []
+      })
+    })
   } else if (data.type === 'message') {
     // 應付多點登陸
-    if(data.from === meState.value.id){
-      console.log(data);
-      let chat = chats.value.find((chat) => chat.id === data.to);
-      console.log(chats.value, chat);
+    console.log(data)
+    let chat = null;
+    if (data.from === meState.value.id) {
+      chat = chats.value.find((chat) => chat.id === data.to)
+      console.log(chats.value, chat)
       chat.messages.push({
         id: Date.now(),
         text: data.text,
         isAnnouncement: data.isAnnouncement,
-        sender: "me",
+        sender: 'me',
         image: data.image,
-        timestamp: data.timestamp,
-      });
-      console.log(chat);
-    }
-    else{
-      let chat = chats.value.find((chat) => chat.id === data.from);
+        timestamp: data.timestamp
+      })
+    } else {
+      if (data.to === -1){
+        chat = chats.value.find((chat) => chat.id === -1)
+      } else {
+        chat = chats.value.find((chat) => chat.id === data.from)
+      }
+      // console.log(chats.value)
+      // console.log(chats.value.find((chat) => chat.id === data.from))
+      // console.log(chats.value.find((chat) => chat.id === data.from).avatar)
+      console.log(data)
       chat.messages.push({
         id: Date.now(),
+        avatar: chats.value.find((chat) => chat.id === data.from).avatar,
         text: data.text,
         isAnnouncement: data.isAnnouncement,
-        sender: "me" ? data.from === meState.value.id : data.username,
+        sender: data.sender.username,
         image: data.image,
-        timestamp: data.timestamp,
-      });
+        timestamp: data.timestamp
+      })
     }
-    if(selectedChatId.value !== chat.id) chat.unread = true;
-    chat.lastMessage = data.text;
+    console.log(selectedChatId.value, chat.id)
+    if (selectedChatId.value !== chat.id) chat.unread = true
+    chat.lastMessage = data.text
   }
-};
+}
 
-const selectedChatId = ref(1);
+const selectedChatId = ref(-1)
 const chats = ref([
   {
     id: -1,
@@ -97,14 +104,14 @@ const chats = ref([
     lastMessage: '',
     messages: []
   }
-]);
+])
 const selectedChat = computed(() => {
-  return chats.value.find((chat) => chat.id === selectedChatId.value) || chats.value[0];
-});
+  return chats.value.find((chat) => chat.id === selectedChatId.value) || chats.value[0]
+})
 
 const selectChat = (id) => {
-  selectedChatId.value = id;
-};
+  selectedChatId.value = id
+}
 
 const sendMessage = (message) => {
   if (selectedChat.value) {
@@ -116,11 +123,11 @@ const sendMessage = (message) => {
         from: meState.value.id,
         image: message.image,
         text: message.text,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       })
-    );
+    )
   }
-};
+}
 </script>
 
 <style scoped>
