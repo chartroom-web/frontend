@@ -38,8 +38,12 @@ ws.onmessage = (event) => {
       })
     );
   } else if (data.type === 'getonline') {
-    chats.value = chats.value.filter((chat) =>
-      data.usersMemberList.some((user) => user.id === chat.id)
+    chats.value = chats.value.filter((chat) =>{
+        if (chat.id === -1) {
+          return true;
+        }
+        data.usersMemberList.some((user) => user.id === chat.id)
+      }
     );
     data.usersMemberList.forEach((user) => {
       if (user.id === meState.value.id) return;
@@ -53,6 +57,7 @@ ws.onmessage = (event) => {
       });
     });
   } else if (data.type === 'message') {
+    // 應付多點登陸
     if(data.from === meState.value.id){
       console.log(data);
       let chat = chats.value.find((chat) => chat.id === data.to);
@@ -60,6 +65,7 @@ ws.onmessage = (event) => {
       chat.messages.push({
         id: Date.now(),
         text: data.text,
+        isAnnouncement: data.isAnnouncement,
         sender: "me",
         image: data.image,
         timestamp: data.timestamp,
@@ -71,7 +77,8 @@ ws.onmessage = (event) => {
       chat.messages.push({
         id: Date.now(),
         text: data.text,
-        sender: data.username,
+        isAnnouncement: data.isAnnouncement,
+        sender: "me" ? data.from === meState.value.id : data.username,
         image: data.image,
         timestamp: data.timestamp,
       });
@@ -82,7 +89,15 @@ ws.onmessage = (event) => {
 };
 
 const selectedChatId = ref(1);
-const chats = ref([]);
+const chats = ref([
+  {
+    id: -1,
+    name: 'Group',
+    avatar: null,
+    lastMessage: '',
+    messages: []
+  }
+]);
 const selectedChat = computed(() => {
   return chats.value.find((chat) => chat.id === selectedChatId.value) || chats.value[0];
 });
@@ -96,6 +111,7 @@ const sendMessage = (message) => {
     ws.send(
       JSON.stringify({
         type: 'message',
+        isAnnouncement: false,
         to: selectedChat.value.id,
         from: meState.value.id,
         image: message.image,
