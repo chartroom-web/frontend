@@ -81,7 +81,7 @@ ws.onmessage = (event) => {
       console.log(data)
       chat.messages.push({
         id: Date.now(),
-        avatar: chats.value.find((chat) => chat.id === data.from).avatar,
+        avatar: data.to === -1 ? null : chats.value.find((chat) => chat.id === data.from).avatar,
         text: data.text,
         isAnnouncement: data.isAnnouncement,
         sender: data.sender.username,
