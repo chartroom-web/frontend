@@ -7,6 +7,13 @@
         class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-blue-300"
       />
     </div>
+    <div class="mb-4 flex items-center justify-between bg-blue-100 p-2 rounded-lg shadow-inner">
+      <p class="text-gray-700 font-semibold">Online Users: </p>
+      <div class="flex items-center">
+        <span class="text-blue-600 font-bold text-lg mr-2">{{ onlineUsers }}</span>
+        <UserOutlined class="text-blue-600 text-xl" />
+      </div>
+    </div>
     <div class="overflow-auto h-full">
       <template v-if="chats.length">
         <div
@@ -52,7 +59,8 @@ import { defineProps, defineEmits } from 'vue'
 import { UserOutlined } from '@ant-design/icons-vue'
 
 const props = defineProps({
-  chats: Array
+  chats: Array,
+  onlineUsers: Number
 })
 const emit = defineEmits(['selectChat'])
 

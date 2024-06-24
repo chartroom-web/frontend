@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-screen bg-gray-200 overflow-hidden">
-    <ChatList :chats="chats" @selectChat="selectChat" />
+    <ChatList :chats="chats" @selectChat="selectChat" :onlineUsers="onlineUsers"/>
     <ChatWindow :selectedChat="selectedChat" :meState="meState" @sendMessage="sendMessage" />
   </div>
 </template>
@@ -14,10 +14,14 @@ import ChatWindow from '@/components/main/ChatWindow.vue'
 
 const ws = createWebSocket(`ws://${import.meta.env.VITE_BACKEND}`)
 let meState = ref(null)
+let onlineUsers = ref(0)
 
 onMounted(async () => {
-  meState.value = await me()
-  console.log(meState.value)
+  try {
+    meState.value = await me()
+  } catch (e) {
+    window.location.href = '/'
+  }
   online(meState.value)
 })
 
@@ -55,6 +59,7 @@ ws.onmessage = (event) => {
         messages: []
       })
     })
+    onlineUsers.value = data.usersMemberList.length
   } else if (data.type === 'message') {
     // 應付多點登陸
     console.log(data)
