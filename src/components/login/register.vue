@@ -1,5 +1,5 @@
 <template>
-  <div class="whitespace-pre-wrap flex justify-center items-center h-screen">
+  <div class="h-full flex justify-center items-center bg-white">
     <DynamicForm
       :fields="fields"
       buttonText="Register"
@@ -7,7 +7,6 @@
       linkTo="/login"
       :linkClass="errorMsgClass"
       @button-click="RegisterHandler"
-      class="border-2 border-gray-400 rounded-lg shadow-lg p-4 bg-slate-200"
     >
       <template #header> Register to start your session </template>
       <template #link>

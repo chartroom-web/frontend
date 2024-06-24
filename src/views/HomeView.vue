@@ -17,6 +17,7 @@ let meState = ref(null)
 
 onMounted(async () => {
   meState.value = await me()
+  console.log(meState.value)
   online(meState.value)
 })
 
@@ -57,7 +58,7 @@ ws.onmessage = (event) => {
   } else if (data.type === 'message') {
     // 應付多點登陸
     console.log(data)
-    let chat = null;
+    let chat = null
     if (data.from === meState.value.id) {
       chat = chats.value.find((chat) => chat.id === data.to)
       console.log(chats.value, chat)
@@ -70,7 +71,7 @@ ws.onmessage = (event) => {
         timestamp: data.timestamp
       })
     } else {
-      if (data.to === -1){
+      if (data.to === -1) {
         chat = chats.value.find((chat) => chat.id === -1)
       } else {
         chat = chats.value.find((chat) => chat.id === data.from)

@@ -15,12 +15,14 @@
     "show": "lt --port 4173 --print-requests --subdomain frontend --host http://lt.ccuclass.com"
   },
   "dependencies": {
+    "@nanoandrew4/vue3-carousel-3d": "^1.0.0",
     "ant-design-vue": "^4.2.3",
     "axios": "^1.7.2",
     "dotenv": "^16.4.5",
     "reconnecting-websocket": "^4.4.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
+    "vue3-carousel-3d": "^1.0.4",
     "vue3-emoji": "^2.1.8",
     "yup": "^1.4.0"
   },

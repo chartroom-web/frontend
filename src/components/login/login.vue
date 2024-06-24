@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-center items-center h-screen">
+  <div class="h-full flex justify-center items-center bg-white">
     <DynamicForm
       :fields="fields"
       buttonText="Login"
@@ -9,7 +9,7 @@
       :googleButton="true"
       @button-click="emailSignIn"
       @google-sign-in="googleSignIn"
-      class="border-2 border-gray-400 rounded-lg shadow-lg p-4 bg-slate-200"
+      @topage="topage"
     >
       <template #header> Sign in to start your session </template>
       <template #link>
@@ -24,6 +24,7 @@ import { ref } from 'vue'
 import DynamicForm from '@/components/cover/DynamicForm.vue'
 import { mail_login } from '@/functions/auth'
 
+const slides = ref(3);
 let errorMsgClass = ref(null)
 let errorMsg = ref('')
 
@@ -68,6 +69,12 @@ const emailSignIn = async () => {
 
 const googleSignIn = () => {
   console.log('google sign in')
-  window.location.href = 'http://localhost:4876/auth/google_login'
+  window.location.href = `http://${process.env.VITE_BACKEND}/auth/google_login`
+}
+
+const emit = defineEmits(['handleslide'])
+
+const topage= () =>{
+  emit('handleslide', 1)
 }
 </script>

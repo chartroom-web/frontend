@@ -1,5 +1,5 @@
 <template>
-  <form class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm mx-auto mt-10">
+  <form class="bg-white p-8 rounded-lg w-full max-w-sm mx-auto h-auto">
     <header class="text-center my-2 text-slate-300">
       <slot name="header"></slot>
     </header>

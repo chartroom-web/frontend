@@ -24,3 +24,11 @@ export async function me() {
   const response = await axios.get(url, { withCredentials: true })
   return response.data
 }
+
+export async function temp_register(username: string) {
+  const url = 'http://' + import.meta.env.VITE_BACKEND + '/auth/temp_register'
+  const response = await axios.post(url, {
+    username
+  })
+  return response
+}
