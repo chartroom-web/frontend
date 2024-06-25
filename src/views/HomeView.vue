@@ -8,6 +8,8 @@
       @sendBingoInvitation="sendbingo"
       @acceptGame="acceptGame"
       @cancelGame="cancelGame"
+      @change_who_game="change_who_game"
+      @endgame="endgame"
     />
   </div>
 </template>
@@ -32,6 +34,11 @@ onMounted(async () => {
   online(meState.value)
 })
 
+const endgame = () => {
+  const chat = chats.value.find((chat) => chat.id === selectedChatId.value)
+  chat.game = false
+}
+
 const online = (user) => {
   let data = {
     type: 'online',
@@ -40,7 +47,12 @@ const online = (user) => {
   ws.send(JSON.stringify(data))
 }
 
+const change_who_game = (data) => {
+  selectedChat.value.megame = data
+}
+
 const sendbingo = () => {
+  if (selectedChat.value.game) return
   ws.send(
     JSON.stringify({
       type: 'message_game',
@@ -54,6 +66,7 @@ const sendbingo = () => {
 
 ws.onmessage = (event) => {
   let data = JSON.parse(event.data)
+  console.log(data)
   if (data.type === 'online') {
     ws.send(
       JSON.stringify({
@@ -72,6 +85,8 @@ ws.onmessage = (event) => {
       if (chats.value.find((chat) => chat.id === user.id)) return
       chats.value.push({
         id: user.id,
+        game: false,
+        megame: false,
         name: user.username,
         avatar: user.picture,
         lastMessage: '',
@@ -160,6 +175,26 @@ ws.onmessage = (event) => {
     }
     if (chat.lastMessage === 'Bingo Game Invitation') chat.lastMessage === ''
   }
+
+  else if(data.type == 'start_game') {
+    let chat = null
+    if (data.from === meState.value.id) {
+      chat = chats.value.find((chat) => chat.id === data.to)
+      chat.messages = chat.messages.filter((message) => message.id !== data.id)
+      chat.game = true
+      if(data.start == meState.value.id) {
+        chat.megame = true
+      }
+    } else {
+      chat = chats.value.find((chat) => chat.id === data.from)
+      console.log(chat)
+      chat.messages = chat.messages.filter((message) => message.id !== data.id)
+      chat.game = true
+      if(data.start != chat.id) {
+        chat.megame = true
+      }
+    }
+  }
 }
 
 const selectedChatId = ref(-1)
@@ -198,15 +233,11 @@ const sendMessage = (message) => {
 }
 
 const acceptGame = (data) => {
-  console.log(data)
   ws.send(
     JSON.stringify({
-      type: 'message_game',
-      isAnnouncement: false,
-      to: data.from,
+      type: 'start_game',
+      to: selectedChatId.value,
       from: meState.value.id,
-      image: data.image,
-      text: 'Bingo Game Invitation Accepted',
       timestamp: new Date().toISOString()
     })
   )
