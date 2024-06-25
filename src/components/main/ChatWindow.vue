@@ -12,10 +12,74 @@
       <h2 class="font-semibold text-lg">{{ selectedChat.name }}</h2>
     </header>
     <div class="flex-1 p-4 overflow-auto bg-gray-100">
+      <div v-show="bingogame" class="h-full w-full flex items-center justify-center">
+        <div class="w-full max-w-2xl bg-white p-4 shadow-2xl rounded-lg">
+          <div class="relative pb-full aspect-ratio-box">
+            <div class="absolute inset-0 grid grid-cols-5 gap-4">
+              <div
+                v-for="number in bingoNumbers"
+                :key="number"
+                :class="{
+                  'bg-blue-500 text-white': selectedNumbers.includes(number),
+                  'bg-blue-200 text-gray-700': !selectedNumbers.includes(number)
+                }"
+                class="w-full h-full flex items-center justify-center rounded-lg text-xl font-semibold cursor-pointer"
+                @click="selectNumber(number)"
+              >
+                {{ number }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div v-for="message in selectedChat.messages" :key="message.id" class="mb-4">
         <div v-if="message.isAnnouncement" class="w-full text-center text-gray-500">
           {{ message.text }}
         </div>
+        <div v-else-if="message.isGame" class="flex">
+          <div :class="{ 'text-right': message.sender === 'me', 'flex-1': true }" class="p-4">
+            <div v-if="message.sender !== 'me'" class="text-gray-400 text-xs mb-1">
+              {{ message.sender }}
+            </div>
+            <div
+              :class="[
+                'inline-block p-6 rounded-lg border',
+                message.sender === 'me' ? 'bg-blue-50 border-blue-200' : 'bg-white shadow'
+              ]"
+              class="max-w-5xl"
+            >
+              <div class="text-gray-700 mb-4">
+                <p>您有一個新的遊戲對戰邀請！</p>
+                <p v-if="message.sender === 'me'">邀請已發送。</p>
+                <p v-else>來自 {{ message.sender }}.</p>
+              </div>
+              <button
+                v-if="message.sender === 'me'"
+                @click="cancelGame(message)"
+                class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+              >
+                取消邀請
+              </button>
+              <button
+                v-else
+                @click="acceptGame(message)"
+                class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                接受遊戲對戰
+              </button>
+            </div>
+            <div
+              :class="{
+                'text-right': message.sender === 'me',
+                'text-left': message.sender !== 'me'
+              }"
+              class="text-gray-500 text-xs mt-1"
+            >
+              {{ new Date(message.timestamp).toLocaleTimeString() }}
+            </div>
+          </div>
+        </div>
+
         <div v-else class="flex">
           <div v-if="message.sender !== 'me'" class="w-10 h-10 rounded-full mr-3">
             <div v-if="message.avatar">
@@ -40,7 +104,7 @@
                 message.sender === 'me' ? 'bg-blue-500 text-white' : 'bg-white shadow'
               ]"
             >
-              <p v-if="message.text" class="whitespace-pre-wrap">{{ message.text }}</p>
+              <p v-if="message.text" class="whitespace-pre-wrap break-words">{{ message.text }}</p>
               <img
                 v-if="message.image"
                 :src="message.image"
@@ -60,20 +124,61 @@
         </div>
       </div>
     </div>
-    <MessageInput @sendMessage="handleSendMessage" />
+    <MessageInput
+      @sendMessage="handleSendMessage"
+      @sendBingoInvitation="handleBingoInvitation"
+      :chatroomid="selectedChat.id"
+    />
   </main>
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+import { defineProps, defineEmits, ref } from 'vue'
 import MessageInput from '@/components/main/MessageInput.vue'
 import { UserOutlined } from '@ant-design/icons-vue'
+
+const bingogame = ref(false)
+const bingoNumbers = ref(shuffle(Array.from({ length: 25 }, (_, i) => i + 1)))
+const selectedNumbers = ref([])
+
+const selectNumber = (number) => {
+  if (!selectedNumbers.value.includes(number)) {
+    selectedNumbers.value.push(number)
+  }
+}
+
+function shuffle(array) {
+  let currentIndex = array.length,
+    randomIndex
+
+  while (currentIndex != 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex)
+    currentIndex--
+    ;[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]
+  }
+
+  return array
+}
 
 const props = defineProps({
   selectedChat: Object,
   meState: Object
 })
-const emit = defineEmits(['sendMessage'])
+const emit = defineEmits(['sendMessage', 'sendBingoInvitation', 'cancelGame', 'acceptGame'])
+
+const cancelGame = (data) => {
+  console.log(data)
+  emit('cancelGame', data)
+}
+
+const acceptGame = (data) => {
+  console.log(data)
+  emit('acceptGame', data)
+}
+
+const handleBingoInvitation = () => {
+  emit('sendBingoInvitation')
+}
 
 const handleSendMessage = (message) => {
   emit('sendMessage', message)
@@ -89,5 +194,25 @@ textarea:focus {
 button:focus {
   outline: none;
   box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
+}
+
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
+.break-words {
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.pb-full {
+  padding-bottom: 100%;
+}
+
+.aspect-ratio-box {
+  position: relative;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
 }
 </style>

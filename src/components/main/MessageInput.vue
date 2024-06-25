@@ -19,8 +19,13 @@
       :auto-size="{ minRows: 1, maxRows: 5 }"
       @keydown.enter="handleEnter"
     />
-    <div class="mx-2">
-      <V3Emoji @click-emoji="appendEmoji" />
+    <div class="flex items-center mx-2">
+      <button
+        v-if="bingo_icon"
+        @click="sendBingoInvitation"
+        class="bg-yellow-500 text-white px-2 py-2 rounded-lg hover:bg-yellow-600 transition-colors duration-200"
+      ></button>
+      <V3Emoji @click-emoji="appendEmoji" class="ml-2" />
     </div>
     <button
       @click="sendMessage"
@@ -32,13 +37,27 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue'
+import { ref, defineEmits, watch } from 'vue'
 import V3Emoji from 'vue3-emoji'
 import 'vue3-emoji/dist/style.css'
+import createWebSocket from '@/functions/websocket'
 
-const emit = defineEmits(['sendMessage'])
+const props = defineProps({
+  chatroomid: Number
+})
+
+watch(
+  () => props.chatroomid,
+  (id) => {
+    console.log(id)
+    bingo_icon.value = id === -1 ? false : true
+  }
+)
+
+const emit = defineEmits(['sendMessage', 'sendBingoInvitation'])
 const messageText = ref('')
 const previewImages = ref([])
+const bingo_icon = ref(props.chatroomid === -1 ? false : true)
 
 const sendMessage = () => {
   const trimmedMessage = messageText.value.trim()
@@ -60,18 +79,20 @@ const sendMessage = () => {
 
 const appendEmoji = (emoji) => {
   const myField = document.querySelector('#textarea')
-  if (myField.selectionStart || myField.selectionStart === 0) {
-    var startPos = myField.selectionStart
-    var endPos = myField.selectionEnd
-    myField.value =
-      myField.value.substring(0, startPos) +
-      emoji +
-      myField.value.substring(endPos, myField.value.length)
-    myField.selectionStart = startPos + 1
-    myField.selectionEnd = startPos + 1
-  } else {
-    myField.value += emoji
-  }
+  const startPos = myField.selectionStart
+  const endPos = myField.selectionEnd
+
+  // 使用消息文本而不是直接操作DOM
+  messageText.value = messageText.value.slice(0, startPos) + emoji + messageText.value.slice(endPos)
+
+  // 更新光标位置
+  setTimeout(() => {
+    myField.setSelectionRange(startPos + emoji.length, startPos + emoji.length)
+  }, 0)
+}
+
+const sendBingoInvitation = () => {
+  emit('sendBingoInvitation')
 }
 
 const handleEnter = (event) => {

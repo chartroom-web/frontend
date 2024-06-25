@@ -30,5 +30,4 @@ const fields = ref([
     value: ''
   }
 ])
-
 </script>

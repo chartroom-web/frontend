@@ -8,7 +8,7 @@
       />
     </div>
     <div class="mb-4 flex items-center justify-between bg-blue-100 p-2 rounded-lg shadow-inner">
-      <p class="text-gray-700 font-semibold">Online Users: </p>
+      <p class="text-gray-700 font-semibold">Online Users:</p>
       <div class="flex items-center">
         <span class="text-blue-600 font-bold text-lg mr-2">{{ onlineUsers }}</span>
         <UserOutlined class="text-blue-600 text-xl" />

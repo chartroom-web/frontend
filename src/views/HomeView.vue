@@ -1,7 +1,14 @@
 <template>
   <div class="flex h-screen bg-gray-200 overflow-hidden">
-    <ChatList :chats="chats" @selectChat="selectChat" :onlineUsers="onlineUsers"/>
-    <ChatWindow :selectedChat="selectedChat" :meState="meState" @sendMessage="sendMessage" />
+    <ChatList :chats="chats" @selectChat="selectChat" :onlineUsers="onlineUsers" />
+    <ChatWindow
+      :selectedChat="selectedChat"
+      :meState="meState"
+      @sendMessage="sendMessage"
+      @sendBingoInvitation="sendbingo"
+      @acceptGame="acceptGame"
+      @cancelGame="cancelGame"
+    />
   </div>
 </template>
 
@@ -31,6 +38,18 @@ const online = (user) => {
     ...user
   }
   ws.send(JSON.stringify(data))
+}
+
+const sendbingo = () => {
+  ws.send(
+    JSON.stringify({
+      type: 'message_game',
+      isAnnouncement: false,
+      to: selectedChat.value.id,
+      from: meState.value.id,
+      timestamp: new Date().toISOString()
+    })
+  )
 }
 
 ws.onmessage = (event) => {
@@ -71,6 +90,7 @@ ws.onmessage = (event) => {
         id: Date.now(),
         text: data.text,
         isAnnouncement: data.isAnnouncement,
+        isGame: false,
         sender: 'me',
         image: data.image,
         timestamp: data.timestamp
@@ -81,15 +101,13 @@ ws.onmessage = (event) => {
       } else {
         chat = chats.value.find((chat) => chat.id === data.from)
       }
-      // console.log(chats.value)
-      // console.log(chats.value.find((chat) => chat.id === data.from))
-      // console.log(chats.value.find((chat) => chat.id === data.from).avatar)
       console.log(data)
       chat.messages.push({
         id: Date.now(),
         avatar: data.to === -1 ? null : chats.value.find((chat) => chat.id === data.from).avatar,
         text: data.text,
         isAnnouncement: data.isAnnouncement,
+        isGame: false,
         sender: data.sender.username,
         image: data.image,
         timestamp: data.timestamp
@@ -98,6 +116,49 @@ ws.onmessage = (event) => {
     console.log(selectedChatId.value, chat.id)
     if (selectedChatId.value !== chat.id) chat.unread = true
     chat.lastMessage = data.text
+  } else if (data.type == 'message_game') {
+    console.log(data)
+    console.log(chats.value)
+    let chat = null
+    const now = Number(data.time)
+    if (data.from === meState.value.id) {
+      chat = chats.value.find((chat) => chat.id === data.to)
+      chat.messages.push({
+        id: now,
+        // avatar: data.to === -1 ? null : chats.value.find((chat) => chat.id === data.from).avatar,
+        isAnnouncement: data.isAnnouncement,
+        isGame: true,
+        sender: 'me',
+        image: data.image,
+        timestamp: data.timestamp
+      })
+    } else {
+      chat = chats.value.find((chat) => chat.id === data.from)
+      chat.messages.push({
+        id: now,
+        avatar: data.to === -1 ? null : chats.value.find((chat) => chat.id === data.from).avatar,
+        text: data.text,
+        isAnnouncement: data.isAnnouncement,
+        isGame: true,
+        sender: data.sender.username,
+        image: data.image,
+        timestamp: data.timestamp
+      })
+    }
+    if (selectedChatId.value !== chat.id) chat.unread = true
+    chat.lastMessage = 'Bingo Game Invitation'
+  } else if (data.type == 'delete_message_game') {
+    let chat = null
+    console.log(data.id)
+    if (data.from === meState.value.id) {
+      chat = chats.value.find((chat) => chat.id === data.to)
+      chat.messages = chat.messages.filter((message) => message.id !== data.id)
+    } else {
+      chat = chats.value.find((chat) => chat.id === data.from)
+      console.log(chat)
+      chat.messages = chat.messages.filter((message) => message.id !== data.id)
+    }
+    if (chat.lastMessage === 'Bingo Game Invitation') chat.lastMessage === ''
   }
 }
 
@@ -120,6 +181,7 @@ const selectChat = (id) => {
 }
 
 const sendMessage = (message) => {
+  console.log(message)
   if (selectedChat.value) {
     ws.send(
       JSON.stringify({
@@ -133,6 +195,33 @@ const sendMessage = (message) => {
       })
     )
   }
+}
+
+const acceptGame = (data) => {
+  console.log(data)
+  ws.send(
+    JSON.stringify({
+      type: 'message_game',
+      isAnnouncement: false,
+      to: data.from,
+      from: meState.value.id,
+      image: data.image,
+      text: 'Bingo Game Invitation Accepted',
+      timestamp: new Date().toISOString()
+    })
+  )
+}
+
+const cancelGame = (data) => {
+  ws.send(
+    JSON.stringify({
+      type: 'delete_message_game',
+      id: data.id,
+      to: selectedChatId.value,
+      from: meState.value.id,
+      timestamp: new Date().toISOString()
+    })
+  )
 }
 </script>
 

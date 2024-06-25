@@ -1,9 +1,9 @@
 <template>
-  <div class="h-screen flex items-center justify-center bg-gray-100"> 
+  <div class="h-screen flex items-center justify-center bg-gray-100">
     <div class="w-full">
       <div>
         <h1 class="text-4xl text-center">
-          {{message[curentindex]}}
+          {{ message[curentindex] }}
         </h1>
       </div>
       <Carousel3d
@@ -20,31 +20,30 @@
         @handleslide="handleSlideChange"
         :on-main-slide-click="test"
       >
-      <Slide :index="0" class="">
-        <login />
-      </Slide>
-      <Slide :index="1">
-        <register />
-      </Slide>
-      <Slide :index="2">
-        <quickstart />
-      </Slide>
-    </Carousel3d>
+        <Slide :index="0" class="">
+          <login />
+        </Slide>
+        <Slide :index="1">
+          <register />
+        </Slide>
+        <Slide :index="2">
+          <quickstart />
+        </Slide>
+      </Carousel3d>
     </div>
   </div>
 </template>
-
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import DynamicForm from '@/components/cover/DynamicForm.vue'
 import { mail_login } from '@/functions/auth'
-import { Carousel3d, Slide } from '@nanoandrew4/vue3-carousel-3d';
+import { Carousel3d, Slide } from '@nanoandrew4/vue3-carousel-3d'
 import login from '@/components/login/login.vue'
 import register from '@/components/login/register.vue'
 import quickstart from '@/components/login/quickstart.vue'
 
-const carousel = ref(null);
+const carousel = ref(null)
 const curentindex = ref(0)
 const message = ref(['Login', 'Register', 'QuickStart'])
 

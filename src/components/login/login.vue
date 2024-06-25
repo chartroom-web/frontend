@@ -24,7 +24,7 @@ import { ref } from 'vue'
 import DynamicForm from '@/components/cover/DynamicForm.vue'
 import { mail_login } from '@/functions/auth'
 
-const slides = ref(3);
+const slides = ref(3)
 let errorMsgClass = ref(null)
 let errorMsg = ref('')
 
@@ -74,7 +74,7 @@ const googleSignIn = () => {
 
 const emit = defineEmits(['handleslide'])
 
-const topage= () =>{
+const topage = () => {
   emit('handleslide', 1)
 }
 </script>
