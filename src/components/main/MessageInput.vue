@@ -40,7 +40,6 @@
 import { ref, defineEmits, watch } from 'vue'
 import V3Emoji from 'vue3-emoji'
 import 'vue3-emoji/dist/style.css'
-import createWebSocket from '@/functions/websocket'
 
 const props = defineProps({
   chatroomid: Number

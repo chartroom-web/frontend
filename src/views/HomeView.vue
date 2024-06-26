@@ -4,6 +4,8 @@
     <ChatWindow
       :selectedChat="selectedChat"
       :meState="meState"
+      :selectnum="selectnum"
+      :from="from"
       @sendMessage="sendMessage"
       @sendBingoInvitation="sendbingo"
       @acceptGame="acceptGame"
@@ -21,7 +23,7 @@ import { me } from '@/functions/auth'
 import ChatList from '@/components/main/ChatList.vue'
 import ChatWindow from '@/components/main/ChatWindow.vue'
 
-const ws = createWebSocket(`ws://${import.meta.env.VITE_BACKEND}`)
+const ws = createWebSocket(`wss://${import.meta.env.VITE_BACKEND}`)
 let meState = ref(null)
 let onlineUsers = ref(0)
 
@@ -37,6 +39,8 @@ onMounted(async () => {
 const endgame = () => {
   const chat = chats.value.find((chat) => chat.id === selectedChatId.value)
   chat.game = false
+  chat.megame = false
+  selectnum.value = -1
 }
 
 const online = (user) => {
@@ -174,15 +178,15 @@ ws.onmessage = (event) => {
       chat.messages = chat.messages.filter((message) => message.id !== data.id)
     }
     if (chat.lastMessage === 'Bingo Game Invitation') chat.lastMessage === ''
-  }
-
-  else if(data.type == 'start_game') {
+  } else if (data.type == 'start_game') {
+    alert('若獲得五條連線及贏得勝利，若一整條連線上皆為奇數或者偶數，該條連線翻倍計算')
     let chat = null
     if (data.from === meState.value.id) {
       chat = chats.value.find((chat) => chat.id === data.to)
       chat.messages = chat.messages.filter((message) => message.id !== data.id)
       chat.game = true
-      if(data.start == meState.value.id) {
+      chat.megame = false
+      if (data.start == meState.value.id) {
         chat.megame = true
       }
     } else {
@@ -190,12 +194,37 @@ ws.onmessage = (event) => {
       console.log(chat)
       chat.messages = chat.messages.filter((message) => message.id !== data.id)
       chat.game = true
-      if(data.start != chat.id) {
+      chat.megame = false
+      if (data.start != chat.id) {
         chat.megame = true
       }
     }
+  } else if (data.type === 'select_number') {
+    selectnum.value = data.number
+    from.value = data.from
+  } else if (data.type === 'game_end') {
+    if (data.win != null) {
+      if (data.win == meState.value.id) {
+        console.log('win')
+        alert('恭喜贏得勝利')
+      } else {
+        console.log('lose')
+        alert('很可惜輸了')
+      }
+    }
+    if (data.win == null) {
+      if (data.to != meState.value.id) {
+        alert('您已離開遊戲')
+      } else {
+        alert('對方已離開遊戲')
+      }
+    }
+    endgame()
   }
 }
+
+const selectnum = ref(-1)
+const from = ref(-1)
 
 const selectedChatId = ref(-1)
 const chats = ref([

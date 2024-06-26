@@ -13,14 +13,20 @@
       <h2 class="font-semibold text-lg">{{ selectedChat.name }}</h2>
     </header>
     <div class="flex-1 p-4 overflow-auto bg-gray-100 relative">
-      <div v-show="selectedChat.game" class="absolute inset-0 flex flex-col items-center justify-center">
-        <div class="w-full max-w-2xl bg-white p-4 shadow-2xl rounded-lg mb-4">
+      <div
+        v-show="selectedChat.game"
+        class="absolute inset-0 flex flex-col items-center justify-center"
+      >
+        <div class="w-full max-w-2xl bg-white p-4 shadow-2xl rounded-lg mb-4 relative">
+          <div class="absolute top-4 left-4">
+            <a-button type="text" @click="handleLeave" icon>
+              <CloseCircleOutlined style="font-size: 24px; color: red" />
+            </a-button>
+          </div>
           <div class="text-center font-semibold text-lg mb-4">
-            現在是 {{ selectedChat.megame == true ? '我' : selectedChat.name}} 的回合
+            現在是 {{ selectedChat.megame ? '我' : selectedChat.name }} 的回合
           </div>
-          <div class="text-center font-semibold text-lg">
-            當前連線數: {{ linenums }}
-          </div>
+          <div class="text-center font-semibold text-lg mb-4">當前連線數: {{ linenums }}</div>
         </div>
         <div class="w-full max-w-2xl bg-white p-4 shadow-2xl rounded-lg">
           <div class="relative pb-full aspect-ratio-box">
@@ -141,119 +147,123 @@
   </main>
 </template>
 
-
-
-
 <script setup>
 import { defineProps, defineEmits, ref, watch } from 'vue'
 import MessageInput from '@/components/main/MessageInput.vue'
 import { UserOutlined } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue';
+import { message } from 'ant-design-vue'
 import createWebSocket from '@/functions/websocket'
-import { me } from '@/functions/auth';
 
-const [messageApi, contextHolder] = message.useMessage();
+const [messageApi, contextHolder] = message.useMessage()
 
 const linenums = ref(0)
 const bingoNumbers = ref(shuffle(Array.from({ length: 25 }, (_, i) => i + 1)))
 const selectedNumbers = ref([])
 const props = defineProps({
   selectedChat: Object,
-  meState: Object
+  meState: Object,
+  selectnum: Number,
+  from: Number
 })
-const ws = createWebSocket(`ws://${import.meta.env.VITE_BACKEND}`)
+const ws = createWebSocket(`wss://${import.meta.env.VITE_BACKEND}`)
+import { CloseCircleOutlined } from '@ant-design/icons-vue'
+
+const handleLeave = () => {
+  ws.send(
+    JSON.stringify({
+      type: 'game_end',
+      to: props.selectedChat.id,
+      from: props.meState.id,
+      win: null
+    })
+  )
+}
+
+watch(
+  () => props.selectnum,
+  (num) => {
+    if (num == -1) {
+      bingoNumbers.value = shuffle(Array.from({ length: 25 }, (_, i) => i + 1))
+      selectedNumbers.value = []
+      linenums.value = 0
+      return
+    }
+    if (num != null) {
+      chagenumber(num)
+      linenums.value = countLines()
+      console.log(linenums.value)
+      if (linenums.value >= 5) {
+        messageApi.success(`bingo!`)
+        ws.send(
+          JSON.stringify({
+            type: 'game_end',
+            to: props.selectedChat.id,
+            from: props.meState.id,
+            win: props.meState.id
+          })
+        )
+        return
+      } else {
+        messageApi.info(`選擇了 ${num} 號`)
+      }
+      if (props.from == props.meState.id) {
+        emit('change_who_game', false)
+      } else {
+        emit('change_who_game', true)
+      }
+    }
+  }
+)
 
 const countLines = () => {
-  let lines = [];
-  let ans = 0;
+  let lines = []
+  let ans = 0
   // 檢查行
   for (let i = 0; i < 5; i++) {
-    const row = selectedNumbers.value.slice(i * 5, i * 5 + 5);
+    const row = bingoNumbers.value.slice(i * 5, i * 5 + 5)
+    // console.log(row)
     if (row.every((number) => selectedNumbers.value.includes(number))) {
-      lines.push(row);
+      lines.push(row)
     }
   }
 
   // 檢查列
   for (let i = 0; i < 5; i++) {
-    let col = [];
+    let col = []
     for (let j = 0; j < 5; j++) {
-      col.push(selectedNumbers[i + j * 5]);
+      col.push(bingoNumbers.value[i + j * 5])
     }
     if (col.every((number) => selectedNumbers.value.includes(number))) {
-      lines.push(col);
+      lines.push(col)
     }
   }
 
   // 檢查主對角線
-  let mainDiagonal = [];
+  let mainDiagonal = []
   for (let i = 0; i < 5; i++) {
-    mainDiagonal.push(selectedNumbers[i * 6]);
+    mainDiagonal.push(bingoNumbers.value[i * 6])
   }
   if (mainDiagonal.every((number) => selectedNumbers.value.includes(number))) {
-    lines.push(mainDiagonal);
+    lines.push(mainDiagonal)
   }
 
   // 檢查副對角線
-  let antiDiagonal = [];
+  let antiDiagonal = []
   for (let i = 0; i < 5; i++) {
-    antiDiagonal.push(selectedNumbers[i * 4 + 4]);
+    antiDiagonal.push(bingoNumbers.value[i * 4 + 4])
   }
   if (antiDiagonal.every((number) => selectedNumbers.value.includes(number))) {
-    lines.push(antiDiagonal);
+    lines.push(antiDiagonal)
   }
   for (let i = 0; i < lines.length; i++) {
-    ans += 1;
-    if(lines[i].every((number) => number % 2 == 0)){
-      ans += 1;
-    }
-    else if(lines[i].every((number) => number % 2 == 1)){
-      ans += 1;
-    }
-  }
-  return ans;
-};
-
-ws.onmessage = (event) => {
-  let data = JSON.parse(event.data)
-  console.log(data)
-  if (data.type === 'select_number') {
-    console.log(48763)
-    chagenumber(data.number)
-    linenums.value = countLines()
-    if(linenums.value >= 5){
-      messageApi.success(`bingo!`)
-      ws.send(
-        JSON.stringify({
-          type: 'game_end',
-          to: props.selectedChat.id,
-          from: props.meState.id,
-          win: meState.id
-        })
-      )
-    }
-    else{
-      messageApi.info(`選擇了 ${data.number} 號`)
-    }
-    if(data.from == props.meState.id){
-      emit('change_who_game', false)
-    }
-    else{
-      emit('change_who_game', true)
+    ans += 1
+    if (lines[i].every((number) => number % 2 == 0)) {
+      ans += 1
+    } else if (lines[i].every((number) => number % 2 == 1)) {
+      ans += 1
     }
   }
-
-  if(data.type === 'game_end'){
-    if(data.win != null){
-      if(data.win == meState.id){
-        alert('恭喜贏得勝利')
-      }
-      else{
-        alert('很可惜輸了')
-      }
-    }
-    emit('endgame')
-  }
+  return ans
 }
 
 const chagenumber = (number) => {
@@ -263,12 +273,12 @@ const chagenumber = (number) => {
 }
 
 const selectNumber = (number) => {
-  if (props.selectedChat.megame == false){
-    messageApi.info(`現在是 ${props.selectedChat.name} 的回合`);
+  if (props.selectedChat.megame == false) {
+    messageApi.info(`現在是 ${props.selectedChat.name} 的回合`)
     return
   }
-  if(selectedNumbers.value.includes(number)){
-    messageApi.info(`已選擇過 ${number} 號`);
+  if (selectedNumbers.value.includes(number)) {
+    messageApi.info(`已選擇過 ${number} 號`)
     return
   }
   ws.send(
@@ -294,9 +304,13 @@ function shuffle(array) {
   return array
 }
 
-
-
-const emit = defineEmits(['sendMessage', 'sendBingoInvitation', 'cancelGame', 'acceptGame', 'change_who_game'])
+const emit = defineEmits([
+  'sendMessage',
+  'sendBingoInvitation',
+  'cancelGame',
+  'acceptGame',
+  'change_who_game'
+])
 
 const cancelGame = (data) => {
   console.log(data)
