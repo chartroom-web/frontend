@@ -68,7 +68,11 @@ const sendbingo = () => {
   )
 }
 
-ws.onmessage = (event) => {
+const sleep = (ms) => {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+ws.onmessage = async(event) => {
   let data = JSON.parse(event.data)
   console.log(data)
   if (data.type === 'online') {
@@ -121,9 +125,11 @@ ws.onmessage = (event) => {
         chat = chats.value.find((chat) => chat.id === data.from)
       }
       console.log(data)
+      console.log(chats.value)
+      console.log(chats.value.find((chat) => chat.id === data.from))
       chat.messages.push({
         id: Date.now(),
-        avatar: data.to === -1 ? null : chats.value.find((chat) => chat.id === data.from).avatar,
+        avatar: data.isAnnouncement == true ? -1 : chats.value.find((chat) => chat.id === data.from).avatar,
         text: data.text,
         isAnnouncement: data.isAnnouncement,
         isGame: false,

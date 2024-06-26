@@ -78,6 +78,7 @@ const RegisterHandler = async () => {
     return
   }
   const response = await register(data.username, data.email, data.password)
+  alert('註冊成功 驗證信將在 5 分鐘內寄往您的信箱 請至信箱點擊驗證信')
   console.log(response)
   if (errorMsg.value !== '') {
     return

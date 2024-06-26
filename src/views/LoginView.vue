@@ -68,6 +68,6 @@ const emailSignIn = async () => {
 
 const googleSignIn = () => {
   console.log('google sign in')
-  window.location.href = 'http://localhost:4876/auth/google_login'
+  window.location.href = `https://${import.meta.env.VITE_BACKEND}/auth/google_login`
 }
 </script>
